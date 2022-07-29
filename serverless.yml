@@ -1,0 +1,50 @@
+service: clambda-av
+
+custom:
+  stages:
+    dev:
+      region: us-east-2 ## choose your region here
+      memory: 4096
+    prod:
+      region: us-east-1 ## choose your region here
+      memory: 6120
+
+provider:
+  stage: ${opt:stage}
+  name: aws
+  region: ${self:custom.stages.${self:provider.stage}.region}
+  runtime: nodejs14.x
+  ecr:
+    images:
+      clambdaAv:
+        path: ./
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource:
+          - "arn:aws:s3:::test-clamav-ms" ## allow your bucket here
+          - "arn:aws:s3:::test-clamav-ms/*"
+  apiGateway:
+    apiKeys:
+      - api_key
+        
+functions:
+  virusScan:
+    image:
+      name: clambdaAv
+    memorySize: ${self:custom.stages.${self:provider.stage}.memory}
+    events:
+      - http:
+          path: /scan
+          integration: lambda
+          method: post
+          cors: true
+          private: true
+    timeout: 150
+
+package:
+  exclude:
+    - node_modules/**
+    - coverage/**
+
