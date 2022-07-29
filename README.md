@@ -2,7 +2,6 @@
 
 ```
 sls deploy --stage "dev or prod"
-
 ```
 
 ```
